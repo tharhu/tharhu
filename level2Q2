@@ -1,0 +1,45 @@
+#!/bin/bash
+
+# most expensive process
+get_most_expensive_process() {
+  most_expensive_process=$(ps -eo pid,%mem,%cpu,cmd --sort=-%mem,%cpu | head -n 2 | tail -n 1)
+  echo "Most Expensive Process: $most_expensive_process"
+}
+
+# open TCP ports
+get_open_tcp_ports() {
+  open_tcp_ports=$(ss -tuln | awk 'NR>1 {print $5}')
+  echo "Open TCP Ports: $open_tcp_ports"
+}
+
+# current connections
+get_current_connections() {
+  current_connections=$(netstat -ant | grep ESTABLISHED | wc -l)
+  echo "Current Connections: $current_connections"
+}
+
+# running processes
+get_running_processes() {
+  running_processes=$(ps -eo pid,ppid,cmd,%mem,%cpu --sort=-%mem,%cpu | head -n 6)
+  echo "Running Processes: $running_processes"
+}
+
+# gather computer info and save to file
+get_computer_info() {
+  echo "Computer Info - $(date)" > comp_log.txt
+  echo "Uptime: $(uptime)" >> comp_log.txt
+  echo "Disk Usage:" >> comp_log.txt
+  df -h >> comp_log.txt
+  echo "Memory Usage:" >> comp_log.txt
+  free -h >> comp_log.txt
+  get_most_expensive_process >> comp_log.txt
+  get_open_tcp_ports >> comp_log.txt
+  get_current_connections >> comp_log.txt
+  get_running_processes >> comp_log.txt
+}
+
+# Run to gather computer info and save to file
+get_computer_info
+
+# to run the script every day at 6 PM
+(crontab -l 2>/dev/null; echo "0 18 * * * /bin/bash /path/to/this_script.sh") | crontab -
