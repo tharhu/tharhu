@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# system IP address
+get_system_ip() {
+  hostname -I | awk '{print $1}'
+}
+
+# system information
+get_system_info() {
+  echo "System Information Report"
+  echo "-------------------------"
+
+  echo -e "Desktop Processor:\t$(grep 'model name' /proc/cpuinfo | head -n1 | cut -d ':' -f2 | sed 's/^[ \t]*//')"
+  echo -e "System Kernel:\t\t$(uname -r)"
+
+  echo -e "\nInstalled Software:"
+  if [ -x "$(command -v dpkg)" ]; then
+    dpkg -l | awk '{print $2, $3}'
+  elif [ -x "$(command -v rpm)" ]; then
+    rpm -qa --queryformat '%{NAME} %{VERSION}\n'
+  fi
+
+  echo -e "\nOperating System Version:\t$(cat /etc/*release | grep -m1 '^VERSION_ID' | cut -d '=' -f2 | tr -d '\"')"
+  echo -e "Desktop Memory:\t\t$(free -h | awk '/^Mem:/ {print $2}')"
+  echo -e "Serial Number:\t\t$(cat /sys/class/dmi/id/product_serial 2>/dev/null || echo 'Serial number not available.')"
+  echo -e "System IP Address:\t$(get_system_ip)"
+}
+
+# get and save system information to the file
+get_system_info > system_info.txt
+
+echo "Report generated and saved in 'system_info.txt'"
